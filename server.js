@@ -1,42 +1,35 @@
-// server.js
-const express = require('express');
-const http = require('http');
-const cors = require('cors');
-const { Server } = require('socket.io');
+const express = require("express");
+const http = require("http");
+const cors = require("cors");
+const { Server } = require("socket.io");
 
 const app = express();
+app.use(cors());
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: '*', // You can restrict this to your frontend domain
-    methods: ['GET', 'POST']
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"]
   }
 });
 
-app.use(cors());
-app.use(express.json());
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-// Basic route to confirm it's running
-app.get('/', (req, res) => {
-  res.send('Live Chat Backend Running');
-});
-
-// Handle WebSocket connections
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
-
-  socket.on('message:send', (data) => {
-    console.log('Message received:', data);
-    io.emit('message:receive', data); // Broadcast to all clients
+  socket.on("message:send", (msg) => {
+    io.emit("message:receive", msg);
   });
 
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
 
-// Start the server
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.get("/", (req, res) => {
+  res.send("Live Chat Backend Running");
+});
+
+server.listen(3000, () => {
+  console.log("Server running on port 3000");
 });
